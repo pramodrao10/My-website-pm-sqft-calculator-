@@ -4,6 +4,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Sqft Calculator</title>
 
+<!-- ✅ ONLINE PDF WORKING SCRIPT -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
 <style>
 body{margin:0;font-family:Arial;background:#eee;}
 
@@ -41,14 +44,16 @@ width:60px;
 padding:4px;
 }
 
-button.main{
+button{
 width:100%;
 padding:8px;
 margin-top:8px;
-background:#007bff;
-color:#fff;
 border:none;
+color:#fff;
 }
+
+.main{background:#007bff;}
+.pdf{background:red;}
 
 .total{
 text-align:center;
@@ -66,7 +71,6 @@ font-size:15px;
 
 <h3>Sqft Calculator</h3>
 
-<!-- SIZE MODE -->
 <select id="mode">
 <option value="auto">3-6-9-12 (Auto)</option>
 <option value="inch">Inch to Inch</option>
@@ -75,21 +79,22 @@ font-size:15px;
 <table id="tbl">
 <tr>
 <th>No</th>
-<th>L (inch)</th>
-<th>W (inch)</th>
+<th>L</th>
+<th>W</th>
 <th>Sqft</th>
 </tr>
 
 <tr>
 <td>1</td>
-<td><input type="number" step="0.01" oninput="calc(this)"></td>
-<td><input type="number" step="0.01" oninput="calc(this)"></td>
+<td><input type="number" oninput="calc(this)"></td>
+<td><input type="number" oninput="calc(this)"></td>
 <td class="sq">0</td>
 </tr>
 
 </table>
 
 <button class="main" onclick="addRow()">Add Row</button>
+<button class="pdf" onclick="downloadPDF()">Download PDF</button>
 
 <div class="total">
 Total Sqft: <span id="tot">0</span>
@@ -99,13 +104,13 @@ Total Sqft: <span id="tot">0</span>
 
 <script>
 
-//  INFINITE 3-6-9-12 (MULTIPLE OF 3)
+// AUTO SIZE
 function fixSize(v){
 if(v <= 0) return 0;
 return Math.ceil(v / 3) * 3;
 }
 
-// CALCULATION
+// CALC
 function calc(el){
 
 let mode = document.getElementById("mode").value;
@@ -115,17 +120,14 @@ let r = el.parentElement.parentElement;
 let l = parseFloat(r.children[1].children[0].value) || 0;
 let w = parseFloat(r.children[2].children[0].value) || 0;
 
-// calculation ke liye alag variable
 let calcL = l;
 let calcW = w;
 
-// AUTO MODE
 if(mode === "auto"){
 calcL = fixSize(l);
 calcW = fixSize(w);
 }
 
-// SQFT
 let sqft = (calcL * calcW) / 144;
 
 r.children[3].innerText = sqft.toFixed(2);
@@ -135,19 +137,15 @@ total();
 
 // TOTAL
 function total(){
-
 let t = 0;
-
 document.querySelectorAll(".sq").forEach(e=>{
 t += parseFloat(e.innerText) || 0;
 });
-
 document.getElementById("tot").innerText = t.toFixed(2);
 }
 
 // ADD ROW
 function addRow(){
-
 let t = document.getElementById("tbl");
 let n = t.rows.length;
 
@@ -155,10 +153,39 @@ let r = t.insertRow();
 
 r.innerHTML = `
 <td>${n}</td>
-<td><input type="number" step="0.01" oninput="calc(this)"></td>
-<td><input type="number" step="0.01" oninput="calc(this)"></td>
+<td><input type="number" oninput="calc(this)"></td>
+<td><input type="number" oninput="calc(this)"></td>
 <td class="sq">0</td>
 `;
+}
+
+// ✅ PDF DOWNLOAD WORKING
+function downloadPDF(){
+
+const { jsPDF } = window.jspdf;
+let doc = new jsPDF();
+
+let y = 10;
+
+doc.text("Sqft Calculator", 10, y);
+y += 10;
+
+document.querySelectorAll("#tbl tr").forEach((row)=>{
+
+let text = "";
+
+for(let j=0;j<row.children.length;j++){
+text += row.children[j].innerText + "   ";
+}
+
+doc.text(text, 10, y);
+y += 7;
+
+});
+
+doc.text("Total: " + document.getElementById("tot").innerText, 10, y+5);
+
+doc.save("sqft.pdf");
 }
 
 </script>
